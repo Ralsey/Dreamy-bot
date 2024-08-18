@@ -1,0 +1,5 @@
+typing_extensions
+discord
+python-dotenv
+asyncio
+typing
