@@ -3,3 +3,5 @@ discord
 python-dotenv
 asyncio
 typing
+yt-dlp
+PyNaCl
