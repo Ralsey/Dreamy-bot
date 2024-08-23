@@ -11,9 +11,11 @@ import os
 
 # local imports
 from functions import send_message_to_user, get_video_urls
+from help_menu import DeleteView
 
 # 3rd party imports
 import yt_dlp
+from pretty_help import PrettyHelp, AppMenu
 
 
 # Load the environment variables
@@ -37,10 +39,10 @@ general_category_id: int = 1239651600205873324
 music_voice_id: int = 1268856363866652784
 
 # channel names
-bot_channel: str = "🤖bot-spam"
-music_channel: str = "🎼music-bot"
-ticket_channel: str = "🎫query-corner"
-ticket_logs_channel: str = "🎟ticket-logs"
+bot_channel_name: str = "🤖bot-spam"
+music_channel_name: str = "🎼music-bot"
+ticket_channel_name: str = "🎫query-corner"
+ticket_logs_channel_name: str = "🎟ticket-logs"
 
 # music player settings
 yt_dlp_options: dict[str, str] = {"format": "bestaudio/best", 'noplaylist': False, "postprocessors": [{"key": "FFmpegExtractAudio", "preferredcodec": "mp3", "preferredquality": "192"}]}
@@ -71,22 +73,50 @@ intents.members = True
 client: commands.Bot = commands.Bot(command_prefix="/", intents=intents)
 
 
+# help_menu = PrettyHelp(navigation=AppMenu(), color=discord.Colour.green(), delete_invoke=True, no_category="Commands", image_url="https://i.postimg.cc/28LPZLBW/20240821214134-1.jpg", case_insensitive=True, sort_commands=False)
+client = commands.Bot(command_prefix="/", intents=intents) #, help_command=help_menu)
+
+
 # Startup of the bot
 @client.event
 async def on_ready() -> None:
     print(f"\n[info] Bot is ready as {client.user}\n")
     
     # Set Rich Presence (Streaming)
-    activity = discord.Activity(type=discord.ActivityType.streaming, name="PixelPoppyTV", url="https://www.twitch.tv/pixelpoppytv", details="PixelPoppyTV", state="Sky: Children of The Light")
-    await client.change_presence(status=discord.Status.online, activity=activity)
+    # activity = discord.Activity(type=discord.ActivityType.streaming, name="PixelPoppyTV", url="https://www.twitch.tv/pixelpoppytv", details="PixelPoppyTV", state="Sky: Children of The Light")
+    # await client.change_presence(status=discord.Status.online, activity=activity)
     
     # Under Development (Do not disturb)
-    # activity = discord.Activity(type=discord.ActivityType.playing, name="Do not disturb, im getting tested")
-    # await client.change_presence(status=discord.Status.do_not_disturb, activity=activity)
+    activity = discord.Activity(type=discord.ActivityType.playing, name="Do not disturb, im getting tested")
+    await client.change_presence(status=discord.Status.do_not_disturb, activity=activity)
     await client.tree.sync()  # Sync slash commands
 
+
+@client.tree.command(name="help", description="Lists all available commands.")
+async def help_command(interaction: discord.Interaction):
+    # Create an embed for displaying the commands
+    embed = discord.Embed(title="Dreamy Commands 🍃", description="Here is everything I can do for you!", color=discord.Color.green())
+    embed.set_image(url="https://i.postimg.cc/28LPZLBW/20240821214134-1.jpg")
+    # Loop through all commands in the CommandTree and add them to the embed
+    for command in client.tree.get_commands():
+        embed.add_field(name=f"/{command.name}", value=f"```{command.description}```", inline=False)
+        
+    # Send the embed to the user
+    await interaction.response.send_message(embed=embed, view=DeleteView(pages=[embed], timeout=60, allowed_user=interaction.user))
+
+# Error handling for command not found
+@client.event
+async def on_command_error(ctx: commands.Context, error):
+    if isinstance(error, commands.CommandNotFound):
+        print(f"[warning] {ctx.author} tried to use an unknown command in channel {ctx.channel}: {ctx.message.content}\n - {error}")
+        await ctx.send(f"Command not found! Please check your command or use `/help` for available commands.")
+    else:
+        # Raise the error if it's not CommandNotFound
+        raise error
+
+
 # dev commands
-@client.tree.command(name="dev", description="create a dev channel")
+@client.tree.command(name="dev", description="Creates a hidden dev channel.")
 async def dev(interaction: discord.Interaction, name: str) -> None:
     await interaction.response.defer()  # Defer the response to get more time
     if not any(role.id in [tech_oracle_role_id] for role in interaction.user.roles):
@@ -109,7 +139,7 @@ async def dev(interaction: discord.Interaction, name: str) -> None:
         interaction.guild.default_role: discord.PermissionOverwrite(read_messages=False),
         interaction.guild.me: discord.PermissionOverwrite(read_messages=True),
         interaction.user: discord.PermissionOverwrite(read_messages=True),
-        tech_oracle: discord.PermissionOverwrite(read_messages=True, manage_channels=True)
+        tech_oracle: discord.PermissionOverwrite(read_messages=True, manage_channels=True, manage_messages=True)
     }
 
     def_channel = await interaction.guild.create_text_channel(name=name, category=general_category, overwrites=overwrites, reason="Created a channel for tech oracle def")
@@ -125,14 +155,14 @@ async def dev(interaction: discord.Interaction, name: str) -> None:
     await femboipet.send(f"There has been created an def channel named `{def_channel.name}` by {interaction.user.mention}: {ticket_url}")
 
 
-@client.tree.command(name="ping", description="Check the bot's latency")
+@client.tree.command(name="ping", description="Check the bot's current latency.")
 async def ping(interaction: discord.Interaction) -> None:
     await interaction.response.send_message(f"Pong! that took me {round(client.latency * 1000)}ms to respond")
     print(f"[info] {interaction.user.name} requested the bot's latency, it's {round(client.latency * 1000)}ms")
 
 
 # info commands
-@client.tree.command(name="timers", description="Get the url to the timers channel")
+@client.tree.command(name="timers", description="Gives the link to all of the timers.")
 async def timers(interaction: discord.Interaction) -> None:
     timer_channel_url = "https://discord.com/channels/1239651599480127649/1252324353115291849/1252324488901824556"
     response = "Here is the url to the channel with all the timers:\n" + timer_channel_url
@@ -141,7 +171,7 @@ async def timers(interaction: discord.Interaction) -> None:
 
 
 # Music commands
-@client.tree.command(name="play", description="Play a song or playlist from a YouTube URL")
+@client.tree.command(name="play", description="Play a YouTube song or playlist from a URL.")
 async def play(interaction: discord.Interaction, url: str) -> None:
     await interaction.response.defer()  # Defer to allow time for processing
     guild_id = interaction.guild.id
@@ -192,7 +222,7 @@ async def play(interaction: discord.Interaction, url: str) -> None:
         await interaction.followup.send(f"Added {len(video_urls)} to the front of the queue.")
 
 
-@client.tree.command(name="queue", description="Queue the next song or playlist from a YouTube URL")
+@client.tree.command(name="queue", description="Queue the next song or playlist from a YouTube URL.")
 async def queue(interaction: discord.Interaction, url: str) -> None:
     guild_id = interaction.guild.id
     
@@ -215,7 +245,7 @@ async def queue(interaction: discord.Interaction, url: str) -> None:
         await play_next(interaction)
 
 
-@client.tree.command(name="clear_queue", description="Clear the current set queue")
+@client.tree.command(name="clear_queue", description="Clear the current queue.")
 async def clear_queue(interaction: discord.Interaction) -> None:
     if interaction.guild.id in queues:
         queues[interaction.guild.id].clear()
@@ -224,7 +254,7 @@ async def clear_queue(interaction: discord.Interaction) -> None:
         await interaction.response.send_message("There is no queue to clear")
 
 
-@client.tree.command(name="pause", description="Pause the currently playing song")
+@client.tree.command(name="pause", description="Pause the currently playing song.")
 async def pause(interaction: discord.Interaction) -> None:
     try:
         voice_client = discord.utils.get(client.voice_clients, guild=interaction.guild)
@@ -238,7 +268,7 @@ async def pause(interaction: discord.Interaction) -> None:
         await interaction.response.send_message(f"```fix\nI'm unable to pause the song at the moment```")
 
 
-@client.tree.command(name="resume", description="Resume the paused song")
+@client.tree.command(name="resume", description="Resume the currently paused song.")
 async def resume(interaction: discord.Interaction) -> None:
     try:
         voice_client = discord.utils.get(client.voice_clients, guild=interaction.guild)
@@ -252,7 +282,7 @@ async def resume(interaction: discord.Interaction) -> None:
         await interaction.response.send_message(f"```fix\nI'm unable to resume the song at the moment```")
 
 
-@client.tree.command(name="skip", description="Skip the currently playing song and play the next one in the queue")
+@client.tree.command(name="skip", description="Skip the currently playing song.")
 async def skip(interaction: discord.Interaction) -> None:
     guild_id = interaction.guild.id
     
@@ -272,7 +302,7 @@ async def skip(interaction: discord.Interaction) -> None:
         await interaction.response.send_message(f"```fix\nI'm unable to skip the song at the moment```")
 
 
-@client.tree.command(name="stop", description="Stop the currently playing song and disconnect")
+@client.tree.command(name="stop", description="Stop the currently playing song and disconnect.")
 async def stop(interaction: discord.Interaction) -> None:
     try:
         guild_id = interaction.guild_id
@@ -290,11 +320,11 @@ async def stop(interaction: discord.Interaction) -> None:
 
 
 # Ticket commands
-@client.tree.command(name="openticket", description="Open a ticket")
+@client.tree.command(name="openticket", description="Open a support ticket.")
 async def openticket(interaction: discord.Interaction, name: str = "Open Ticket", description: str = "Command to open a ticket!") -> None:
     await interaction.response.defer()  # Defer the response to get more time
-    if not interaction.channel.name == ticket_channel:
-        await interaction.followup.send(f"Please use this command in the {ticket_channel} channel.")
+    if not interaction.channel.name == ticket_channel_name:
+        await interaction.followup.send(f"Please use this command in the {ticket_channel_name} channel.")
         return
     
     support_category = discord.utils.get(interaction.guild.categories, id=support_category_id)
@@ -309,12 +339,18 @@ async def openticket(interaction: discord.Interaction, name: str = "Open Ticket"
         await interaction.followup.send("```fix\nSky Guardians role not found. Please provide a valid role ID.```")
         return
     
+    tech_oracle_role = interaction.guild.get_role(tech_oracle_role_id)
+    if not tech_oracle_role:
+        print("[error][tickets] Tech Oracle role not found. Please provide a valid role ID.")
+        await interaction.followup.send("```fix\nTech Oracle role not found. Please provide a valid role ID.```")
+        return
+    
     overwrites = {
         interaction.guild.default_role: discord.PermissionOverwrite(read_messages=False),
         interaction.guild.me: discord.PermissionOverwrite(read_messages=True),
         interaction.user: discord.PermissionOverwrite(read_messages=True),
         sky_guardians_role: discord.PermissionOverwrite(read_messages=True),
-        tech_oracle_role_id: discord.PermissionOverwrite(read_messages=True)
+        tech_oracle_role: discord.PermissionOverwrite(read_messages=True)
     }
 
     ticket_name = f"ticket-{interaction.user.name}" if not name else f"{name}'s ticket"
@@ -335,7 +371,7 @@ async def openticket(interaction: discord.Interaction, name: str = "Open Ticket"
     await femboipet.send(f"A ticket has been created by {interaction.user.mention}: {ticket_url}")
 
 
-@client.tree.command(name="closeticket", description="Close the current ticket")
+@client.tree.command(name="closeticket", description="Close the current support ticket.")
 async def closeticket(interaction: discord.Interaction) -> None:
     await interaction.response.defer()  # Defer the response to get more time
     sky_guardians_role = interaction.guild.get_role(sky_guardians_role_id)
@@ -355,7 +391,7 @@ async def closeticket(interaction: discord.Interaction) -> None:
             ticket_logs = f"{message.author.name}: {message.content}\n" + str(ticket_logs)
         ticket_logs = f"Transcript for ticket-{interaction.user.name}:\n" + str(ticket_logs)
 
-        ticket_logs_channel = discord.utils.get(interaction.guild.text_channels, name="ticket_logs_channel")
+        ticket_logs_channel = discord.utils.get(interaction.guild.text_channels, name=ticket_logs_channel_name)
         if ticket_logs_channel:
             await ticket_logs_channel.send(ticket_logs)
         
@@ -369,7 +405,7 @@ async def closeticket(interaction: discord.Interaction) -> None:
 
 
 # Team commands
-@client.tree.command(name="createteam", description="Create a team")
+@client.tree.command(name="createteam", description="Create a team with a leader and an emoji.")
 async def createteam(interaction: discord.Interaction, member: discord.Member, emoji: str) -> None:
     await interaction.response.defer()  # Defer the response to get more time
     if not any(role.id in allowed_roles for role in interaction.user.roles):
@@ -413,7 +449,7 @@ async def createteam(interaction: discord.Interaction, member: discord.Member, e
     }
 
 
-@client.tree.command(name="closeteam", description="Close the team")
+@client.tree.command(name="closeteam", description="Close the given leader's team.")
 async def closeteam(interaction: discord.Interaction, member: discord.Member) -> None:
     await interaction.response.defer()  # Defer the response to get more time
     if not any(role.id in allowed_roles for role in interaction.user.roles):
@@ -440,7 +476,7 @@ async def closeteam(interaction: discord.Interaction, member: discord.Member) ->
     await interaction.followup.send(f"Team {team_data['emoji']} led by {member.mention} has been closed.")
 
 
-@client.tree.command(name="lockteam", description="Lock a team")
+@client.tree.command(name="lockteam", description="Lock the given leader's team.")
 async def lockteam(interaction: discord.Interaction, member: discord.Member) -> None:
     if not any(role.id in allowed_roles for role in interaction.user.roles):
         await interaction.followup.send("You do not have permission to lock a team.")
@@ -469,7 +505,7 @@ async def lockteam(interaction: discord.Interaction, member: discord.Member) -> 
     await interaction.followup.send(f"Team {team_data['emoji']} has been locked.")
 
 
-@client.tree.command(name="unlockteam", description="Unlock a team")
+@client.tree.command(name="unlockteam", description="Unlock a given leader's team.")
 async def unlockteam(interaction: discord.Interaction, member: discord.Member) -> None:
     await interaction.response.defer(ephemeral=True)  # Defer the response to get more time
     if not any(role.id in allowed_roles for role in interaction.user.roles):
