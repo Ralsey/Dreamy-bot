@@ -5,3 +5,4 @@ asyncio
 typing
 yt-dlp
 PyNaCl
+discord-pretty-help
