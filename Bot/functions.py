@@ -1,4 +1,4 @@
-import discord as disc
+import discord
 from discord.ext import commands 
 
 # Function to send the response

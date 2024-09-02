@@ -90,3 +90,33 @@ class DeleteView(View):
         ):
             return True
         return interaction.user == self.allowed_user
+
+
+class CreateButton(View):
+    def __init__(self, *, timeout: float | None = 180):
+        super().__init__(timeout=timeout)
+    
+    @discord.ui.button(label="Create", style=discord.ButtonStyle.primary, custom_id="create")
+    async def create(self, interaction: discord.Interaction):
+        await interaction.response.send_message("Created!", ephemeral=True)
+        self.stop()
+    
+    @discord.ui.button(label="Cancel", style=discord.ButtonStyle.danger, custom_id="cancel")
+    async def cancel(self, interaction: discord.Interaction):
+        await interaction.response.send_message("Cancelled!", ephemeral=True)
+        self.stop()
+        
+    async def interaction_check(self, interaction: discord.Interaction) -> bool:
+        return interaction.user.id == 1234567890
+    
+    async def on_timeout(self) -> None:
+        
+        for child in self.children:
+            if isinstance(child, discord.ui.Button):
+                child.disabled = True
+        self.stop()
+        return await self.message.edit(view=self)
+    
+    async def on_error(self, error: Exception, item: discord.ui.Item, interaction: discord.Interaction) -> None:
+        return await interaction.response.send_message("An error occurred!", ephemeral=True)
+    

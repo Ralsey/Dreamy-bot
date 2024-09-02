@@ -6,3 +6,4 @@ typing
 yt-dlp
 PyNaCl
 discord-pretty-help
+chat-exporter
