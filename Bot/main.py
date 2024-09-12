@@ -100,7 +100,7 @@ async def ping(interaction: discord.Interaction) -> None:
 @client.tree.command(name="ticket_menu", description="Create a ticket create menu.")
 async def ticket(interaction: discord.Interaction) -> None:
     await interaction.response.defer()
-    allowed_roles: list[int] = [ids[interaction.guild.id]["sancturary_keeper_role_id"], ids[interaction.guild.id]["event_luminary_role_id"], ids[interaction.guild.id]["sky_guardians_role_id"], ids[interaction.guild.id]["tech_oracle_role_id"]]
+    allowed_roles: list[int] = [ids[interaction.guild.id]["sancturary_keeper_role_id"], ids[interaction.guild.id]["sky_guardians_role_id"], ids[interaction.guild.id]["tech_oracle_role_id"]]
     if not any(role.id in allowed_roles for role in interaction.user.roles):
         await interaction.followup.send("```fix\nYou do not have permission to create a ticket menu.```", ephemeral=True)
         return
