@@ -3,7 +3,7 @@
 - An team creation system
 - An music player with playlist and queue capabilities
 
-Join the discord server and see the bot in action!: [DreamySkySanctury](http://discord.gg/DreamySkySanctuary)
+Join the discord server and see the bot in action!: [DreamySkySanctuary](http://discord.gg/DreamySkySanctuary)
 
 !!!the bot does require you to have FFMpeg added to you PATH variable
 

@@ -2,3 +2,6 @@
 .venv/
 *.pyc
 .vscode/
+*.zip
+/Bot/tickets
+!/Bot/tickets/ticketMenu.py

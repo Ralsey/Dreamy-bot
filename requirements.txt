@@ -7,3 +7,5 @@ yt-dlp
 PyNaCl
 discord-pretty-help
 chat-exporter
+discord-py-interactions
+mysql-connector-python
