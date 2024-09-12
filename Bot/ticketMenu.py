@@ -186,12 +186,6 @@ class PersistentCloseTicketView(discord.ui.View):
             await interaction.response.send_message("```fix\nTech Oracle role not found. Please provide a valid role ID.```", ephemeral=True)
             return
         
-        connection = create_connection("Tickets")
-        user_id = load_ticket_from_db(connection, interaction.channel.id)
-        if not user_id:
-            await interaction.response.send_message("No saved ticket found for this channel.", ephemeral=True)
-            return
-        
         select = Select(options=[
             discord.SelectOption(label="Yes, close this ticket", value="01", emoji="☑️", description="This closes the ticket and will mark it as solved"),
             discord.SelectOption(label="No, keep this ticket open", value="02", emoji="✖️", description="This will keep the ticket open and allow you to continue the conversation"),
@@ -219,7 +213,9 @@ class PersistentCloseTicketView(discord.ui.View):
         if interaction.data["values"][0] == "01": # Yes, close this ticket
             if interaction.user.id != ids[interaction.guild.id]["owner_id"] or sky_guardians_role in interaction.user.roles or tech_oracle_role in interaction.user.roles:
                 await interaction.followup.send("Ticket will be closed.", ephemeral=True)
+                connection = create_connection("Tickets")
                 user_id = load_ticket_from_db(connection, interaction.channel.id)
+                user_id = user_id["user_id"]
                 if not user_id:
                     await interaction.followup.send("No saved ticket found for this channel.", ephemeral=True)
                     return
