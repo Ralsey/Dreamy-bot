@@ -230,7 +230,7 @@ class PersistentCloseTicketView(discord.ui.View):
 
                 ticket_logs_channel = self.client.get_channel(ids[interaction.guild.id]["ticket_log_channel_id"])
                 if ticket_logs_channel:
-                    await ticket_logs_channel.send(f"Transcript for {interaction.channel.name}:", file=discord.File(path))
+                    await ticket_logs_channel.send(f"Transcript for {interaction.channel.name}:\nThe ticket for {user.name} a.k.a {user.display_name} has been closed by {interaction.user.name} a.k.a {interaction.user.display_name}", file=discord.File(path))
                 else:
                     print("[warning][tickets] Ticket logs channel not found. Please provide a valid channel name.")
                 print(f"[tickets] Ticket closed by user {interaction.user.name} in channel {interaction.channel.name}")
