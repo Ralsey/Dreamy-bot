@@ -219,6 +219,16 @@ class PersistentCloseTicketView(discord.ui.View):
         if interaction.data["values"][0] == "01": # Yes, close this ticket
             if interaction.user.id != ids[interaction.guild.id]["owner_id"] or sky_guardians_role in interaction.user.roles or tech_oracle_role in interaction.user.roles:
                 await interaction.followup.send("Ticket will be closed.", ephemeral=True)
+                user_id = load_ticket_from_db(connection, interaction.channel.id)
+                if not user_id:
+                    await interaction.followup.send("No saved ticket found for this channel.", ephemeral=True)
+                    return
+                user = await self.client.fetch_user(user_id)
+                if not user:
+                    print("[error][tickets] The user that created this ticket is not found!")
+                    await interaction.followup.send("```fix\nThe user that created this ticket is not found!```", ephemeral=True)
+                    user = interaction.user
+                
                 ticket_logs = ""
                 path = await save_transcript(interaction.channel, ticket_logs)
 
@@ -233,8 +243,8 @@ class PersistentCloseTicketView(discord.ui.View):
                 connection = create_connection("Tickets")
                 delete_ticket_from_db(connection, interaction.channel.id)
                 close_connection(connection)
-                await interaction.user.send("Your ticket has been closed successfully. The Transcript of the ticket has been saved.")
-                await interaction.user.send(f"Transcript for {interaction.channel.name}:", file=discord.File(path))
+                await send_message_to_user(self.client, user_id, "Your ticket has been closed successfully. The Transcript of the ticket has been saved.")
+                await user.send(f"Transcript for {interaction.channel.name}:", file=discord.File(path))
             else:
                 print(f"[warning][tickets] {interaction.user.name} does not have prems to close ticket {interaction.channel.name}")
                 await interaction.followup.send("You do not have permission to use this command.", ephemeral=True)
