@@ -1,1 +1,8 @@
 .env
+.venv/
+*.pyc
+.vscode/
+*.zip
+/Bot/tickets
+!/Bot/tickets/ticketMenu.py
+bot_commands.pdf
